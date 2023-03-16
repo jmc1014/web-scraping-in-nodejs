@@ -102,3 +102,7 @@ dist
 
 # TernJS port file
 .tern-port
+
+james-martin-carlos-exam
+james-martin-carlos-exam.*
+*.to_ignore
