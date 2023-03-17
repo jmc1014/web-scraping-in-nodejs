@@ -1,7 +1,16 @@
 const puppeteer = require("puppeteer");
 const fs = require("fs");
 const cheerio = require("cheerio");
-const { resolve } = require("path");
+const mongoose = require("mongoose");
+const Listing = require("./model/Listing");
+
+async function connectToMongoDB() {
+  const pass = "0Sd7lprSHWLMlBZC"; // retrive it in mongoDB. https://cloud.mongodb.com/v2/6413ddc3e031d16134a4dccc#/security/database/users
+  await mongoose.connect(
+    `mongodb+srv://craiglistUser:${pass}@craiglisting.7ohpcmd.mongodb.net/?retryWrites=true&w=majority`
+  );
+  console.log("connected to mongoDB");
+}
 
 async function scrapeListings(page) {
   // await page.goto(
@@ -20,7 +29,7 @@ async function scrapeListings(page) {
       const timeElement = $(element).find(".meta > span:nth-child(1)");
       const metaText = $(element).find(".meta").text();
       const hoodElement = metaText.substring(0, metaText.length - 4).split("·");
-      const hood =
+      const neighborhood =
         hoodElement.length > 2
           ? hoodElement[2] != "-"
             ? hoodElement[2]
@@ -29,7 +38,7 @@ async function scrapeListings(page) {
       const title = $(titleElement).text();
       const url = $(titleElement).attr("href");
       const datePosted = new Date($(timeElement).attr("title"));
-      return { title, url, datePosted, hood };
+      return { title, url, datePosted, neighborhood };
     })
     .get();
   return listings;
@@ -37,22 +46,25 @@ async function scrapeListings(page) {
 
 async function scrapeJobDescriptions(listings, page) {
   let content = [];
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 6; i++) {
     //listings.length
     await page.goto(listings[i].url, { waitUntil: "networkidle0" });
     const html = await page.content();
     const $ = cheerio.load(html);
 
     const userbody = $(".userbody")
-      .map((index, element) => {
+      .map(async (index, element) => {
         const descrpitionElement = $(element).find("#postingbody");
         const compensationElement = $(element).find(
           "p.attrgroup > span:nth-child(1) > b"
         );
         // console.log("description", element, descrpitionElement);
-        const description = $(descrpitionElement).text();
+        const jobDescription = $(descrpitionElement).text();
         const compensation = $(compensationElement).text();
-        return { ...listings[i], description, compensation };
+        const listingData = { ...listings[i], jobDescription, compensation };
+        const listingModel = new Listing(listingData);
+        await listingModel.save();
+        return listingData;
       })
       .get();
 
@@ -68,6 +80,7 @@ async function sleep(miliseconds) {
 }
 
 async function main() {
+  connectToMongoDB();
   console.log("Start");
   const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
@@ -77,7 +90,7 @@ async function main() {
     page
   );
   console.log("Listings", listings);
-  console.log("listingsWithJobDescirptions", listingsWithJobDescirptions);
+  // console.log("listingsWithJobDescirptions", listingsWithJobDescirptions);
   console.log("End");
 }
 
