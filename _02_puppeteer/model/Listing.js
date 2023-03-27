@@ -9,6 +9,6 @@ const listingsSchema = new mongoose.Schema({
   compensation: String,
 });
 
-const Listing = mongoose.model("Listing", listingsSchema);
+const Listing = mongoose.model("Craigslist", listingsSchema);
 
 module.exports = Listing;

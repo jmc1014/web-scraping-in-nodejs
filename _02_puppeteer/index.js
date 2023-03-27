@@ -5,9 +5,9 @@ const mongoose = require("mongoose");
 const Listing = require("./model/Listing");
 
 async function connectToMongoDB() {
-  const pass = "0Sd7lprSHWLMlBZC"; // retrive it in mongoDB. https://cloud.mongodb.com/v2/6413ddc3e031d16134a4dccc#/security/database/users
+  const pass = ""; // retrive it in mongoDB. https://cloud.mongodb.com/v2/6413ddc3e031d16134a4dccc#/security/database/users
   await mongoose.connect(
-    `mongodb+srv://craiglistUser:${pass}@craiglisting.7ohpcmd.mongodb.net/?retryWrites=true&w=majority`
+    `mongodb+srv://generalUser:${pass}@maindevcluster.ycczv11.mongodb.net/?retryWrites=true&w=majority`
   );
   console.log("connected to mongoDB");
 }
@@ -46,7 +46,7 @@ async function scrapeListings(page) {
 
 async function scrapeJobDescriptions(listings, page) {
   let content = [];
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 2; i++) {
     //listings.length
     await page.goto(listings[i].url, { waitUntil: "networkidle0" });
     const html = await page.content();
